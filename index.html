@@ -1,0 +1,1588 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard Ejecutivo de Mora y Deuda Vencida</title>
+  <script src="reporte58-data.js" charset="utf-8"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --bg: #f5f7f4;
+      --surface: #ffffff;
+      --surface-soft: #edf2ef;
+      --ink: #1d2522;
+      --muted: #65726d;
+      --line: #dce4df;
+      --primary: #174d43;
+      --primary-2: #277064;
+      --accent: #b6882d;
+      --risk: #ad4e42;
+      --warn: #d78f2b;
+      --cool: #3f6f8f;
+      --ok: #4c875f;
+      --shadow: 0 12px 28px rgba(31, 44, 38, 0.08);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+      line-height: 1.45;
+    }
+
+    .page {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    .masthead {
+      color: #fff;
+      background: linear-gradient(135deg, #153f38 0%, #1d5b50 58%, #6f6b38 100%);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .masthead::after {
+      content: "";
+      position: absolute;
+      inset: auto -80px -120px auto;
+      width: 280px;
+      height: 280px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 50%;
+    }
+
+    .masthead-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 0.86rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.32);
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+    }
+
+    .brand-mark::before {
+      content: "";
+      width: 14px;
+      height: 14px;
+      border: 3px solid #fff;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      display: block;
+    }
+
+    .header-logo {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: center;
+      margin-top: 22px;
+    }
+
+    .header-logo-frame {
+      width: 126px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid rgba(255, 255, 255, 0.28);
+      background: #150098;
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.22);
+    }
+
+    .header-logo-frame img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scale(1.015);
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .file-action,
+    .button {
+      min-height: 38px;
+      border: 1px solid rgba(255, 255, 255, 0.32);
+      border-radius: var(--radius);
+      padding: 9px 12px;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.13);
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+    }
+
+    .button {
+      color: var(--primary);
+      background: #fff;
+      border-color: var(--line);
+    }
+
+    .file-action:hover,
+    .button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .button:hover {
+      border-color: var(--primary-2);
+      background: var(--surface-soft);
+    }
+
+    .file-action input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    h1 {
+      position: relative;
+      z-index: 1;
+      margin: 30px 0 6px;
+      max-width: 920px;
+      font-size: 2.2rem;
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      color: rgba(255, 255, 255, 0.82);
+      font-size: 1.02rem;
+      font-weight: 600;
+    }
+
+    .data-note {
+      position: relative;
+      z-index: 1;
+      margin-top: 22px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 0.88rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.13);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      white-space: nowrap;
+    }
+
+    .pill-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #d6ad4f;
+      flex: 0 0 auto;
+    }
+
+    .filters-band {
+      margin: 24px -28px 0;
+      padding: 22px 28px;
+      background: #ffffff;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .filters-head,
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 16px;
+    }
+
+    .eyebrow {
+      margin: 0 0 4px;
+      color: var(--primary-2);
+      font-size: 0.76rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.18rem;
+      letter-spacing: 0;
+    }
+
+    .section-note {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .field {
+      min-width: 0;
+    }
+
+    label {
+      display: block;
+      margin: 0 0 5px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    select,
+    input[type="number"] {
+      width: 100%;
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 0.9rem;
+      padding: 8px 10px;
+    }
+
+    .amount-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    main {
+      display: grid;
+      gap: 26px;
+      margin-top: 26px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(190px, 1fr));
+      gap: 14px;
+    }
+
+    .kpi-card,
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .kpi-card {
+      padding: 16px;
+      min-height: 132px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .kpi-title {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .kpi-value {
+      font-size: 1.68rem;
+      line-height: 1.08;
+      font-weight: 850;
+      color: var(--primary);
+      overflow-wrap: anywhere;
+    }
+
+    .kpi-foot {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .panel {
+      min-width: 0;
+      padding: 18px;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr 0.75fr;
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .rank-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .panel-title {
+      margin: 0 0 3px;
+      font-size: 1rem;
+      font-weight: 850;
+    }
+
+    .panel-subtitle {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .bar-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: minmax(115px, 1fr) minmax(170px, 2fr) minmax(84px, auto);
+      gap: 10px;
+      align-items: center;
+    }
+
+    .bar-label,
+    .table-name {
+      min-width: 0;
+      color: var(--ink);
+      font-size: 0.86rem;
+      font-weight: 750;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .bar-track {
+      height: 12px;
+      border-radius: 999px;
+      background: #e8eee9;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--primary-2), var(--accent));
+      min-width: 3px;
+    }
+
+    .bar-value {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .bucket-chart {
+      min-height: 250px;
+      display: grid;
+      grid-template-columns: repeat(6, minmax(42px, 1fr));
+      gap: 12px;
+      align-items: end;
+      padding-top: 14px;
+    }
+
+    .bucket-item {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: 1fr auto auto;
+      gap: 8px;
+      align-items: end;
+      min-height: 230px;
+    }
+
+    .bucket-col {
+      width: 100%;
+      min-height: 4px;
+      border-radius: 7px 7px 3px 3px;
+      background: linear-gradient(180deg, var(--cool), var(--primary));
+    }
+
+    .bucket-value {
+      color: var(--ink);
+      font-size: 0.76rem;
+      font-weight: 850;
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
+
+    .bucket-label {
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 800;
+      line-height: 1.2;
+      text-align: center;
+    }
+
+    .donut-wrap {
+      min-height: 250px;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      gap: 18px;
+    }
+
+    .donut {
+      width: 174px;
+      height: 174px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: conic-gradient(var(--risk) 0deg, var(--risk) 0deg, var(--ok) 0deg 360deg);
+      position: relative;
+    }
+
+    .donut::after {
+      content: "";
+      position: absolute;
+      width: 104px;
+      height: 104px;
+      border-radius: 50%;
+      background: var(--surface);
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+
+    .donut-center {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+
+    .donut-center strong {
+      display: block;
+      color: var(--primary);
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+
+    .donut-center span {
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+
+    .legend {
+      width: 100%;
+      display: grid;
+      gap: 8px;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 750;
+    }
+
+    .legend-key {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--ok);
+      flex: 0 0 auto;
+    }
+
+    .swatch.stop {
+      background: var(--risk);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 8px;
+      text-align: left;
+      vertical-align: middle;
+      font-size: 0.84rem;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    td.numeric,
+    th.numeric {
+      text-align: right;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      padding: 4px 7px;
+      border-radius: 999px;
+      background: #edf2ef;
+      color: var(--primary);
+      font-size: 0.75rem;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .badge.risk {
+      background: #f6e9e6;
+      color: var(--risk);
+    }
+
+    .detail-panel {
+      overflow: hidden;
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+    }
+
+    .detail-table {
+      min-width: 940px;
+    }
+
+    .detail-table th:nth-child(1),
+    .detail-table td:nth-child(1) {
+      width: 220px;
+    }
+
+    .insights {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .insight {
+      border-left: 4px solid var(--accent);
+      background: #fff;
+      border-radius: var(--radius);
+      border-top: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 14px;
+      min-height: 106px;
+    }
+
+    .insight strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--primary);
+      font-size: 0.92rem;
+    }
+
+    .insight span {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .empty {
+      min-height: 120px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      border: 1px dashed var(--line);
+      border-radius: var(--radius);
+      text-align: center;
+      padding: 16px;
+    }
+
+    .load-status {
+      color: rgba(255, 255, 255, 0.76);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    .footer {
+      margin-top: 28px;
+      padding: 18px 0 4px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    .footer strong {
+      color: var(--primary);
+      font-weight: 850;
+    }
+
+    @media (max-width: 1180px) {
+      .filters {
+        grid-template-columns: repeat(3, minmax(150px, 1fr));
+      }
+
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(190px, 1fr));
+      }
+
+      .charts-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .charts-grid .panel:last-child {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 820px) {
+      .page {
+        padding: 18px;
+      }
+
+      .masthead {
+        padding: 20px;
+      }
+
+      .masthead-top,
+      .filters-head,
+      .section-head {
+        align-items: start;
+        flex-direction: column;
+      }
+
+      h1 {
+        font-size: 1.75rem;
+      }
+
+      .header-logo-frame {
+        width: 112px;
+      }
+
+      .filters-band {
+        margin-left: -18px;
+        margin-right: -18px;
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+
+      .filters,
+      .kpi-grid,
+      .charts-grid,
+      .rank-grid,
+      .insights {
+        grid-template-columns: 1fr;
+      }
+
+      .bar-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+
+      .bar-value {
+        text-align: left;
+      }
+
+      .bucket-chart {
+        grid-template-columns: repeat(3, minmax(54px, 1fr));
+      }
+    }
+
+    @media (max-width: 520px) {
+      .page {
+        padding: 12px;
+      }
+
+      .masthead {
+        padding: 18px;
+      }
+
+      h1 {
+        font-size: 1.46rem;
+      }
+
+      .header-logo-frame {
+        width: 98px;
+      }
+
+      .amount-pair {
+        grid-template-columns: 1fr;
+      }
+
+      .filters-band {
+        margin-left: -12px;
+        margin-right: -12px;
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+
+      .kpi-value {
+        font-size: 1.42rem;
+      }
+
+      .bucket-chart {
+        grid-template-columns: repeat(2, minmax(54px, 1fr));
+      }
+
+      .footer {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <div class="masthead-top">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>Mutual · Reporte ejecutivo</span>
+        </div>
+        <div class="actions">
+          <span class="load-status" id="loadStatus">Datos iniciales sanitizados</span>
+          <label class="file-action">
+            Cargar Excel
+            <input id="excelFile" type="file" accept=".xlsx,.xls">
+          </label>
+        </div>
+      </div>
+      <div class="header-logo" aria-label="Logo Mutual 22 de Septiembre">
+        <div class="header-logo-frame">
+          <img src="logo-mutual-22-septiembre.jpg" alt="Asociación Mutual 22 de Septiembre">
+        </div>
+      </div>
+      <h1>Dashboard Ejecutivo de Mora y Deuda Vencida</h1>
+      <p class="subtitle" id="subtitle">Reporte 58 – Análisis de deuda</p>
+      <div class="data-note">
+        <span class="pill"><span class="pill-dot"></span><span id="recordScope">Cartera completa</span></span>
+        <span class="pill">Vista sin teléfonos, correos ni observaciones completas</span>
+        <span class="pill">DNI protegido en rankings y detalle</span>
+      </div>
+    </header>
+
+    <section class="filters-band" aria-label="Filtros del tablero">
+      <div class="filters-head">
+        <div>
+          <p class="eyebrow">Filtros interactivos</p>
+          <h2>Segmentar para lectura ejecutiva</h2>
+          <p class="section-note">Los indicadores y rankings se actualizan con cada selección.</p>
+        </div>
+        <button class="button" id="resetFilters" type="button">Restablecer filtros</button>
+      </div>
+      <div class="filters">
+        <div class="field">
+          <label for="groupFilter">Grupo de Afinidad</label>
+          <select id="groupFilter"></select>
+        </div>
+        <div class="field">
+          <label for="localityFilter">Localidad</label>
+          <select id="localityFilter"></select>
+        </div>
+        <div class="field">
+          <label for="companyFilter">Empresa de Cobro</label>
+          <select id="companyFilter"></select>
+        </div>
+        <div class="field">
+          <label for="stopFilter">STOP</label>
+          <select id="stopFilter">
+            <option value="">Todos</option>
+            <option value="SI">SI</option>
+            <option value="NO">NO</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="bucketFilter">Tramo de atraso</label>
+          <select id="bucketFilter"></select>
+        </div>
+        <div class="field">
+          <label>Rango de monto vencido</label>
+          <div class="amount-pair">
+            <input id="minAmount" type="number" min="0" step="1000" placeholder="Desde">
+            <input id="maxAmount" type="number" min="0" step="1000" placeholder="Hasta">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <main>
+      <section>
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Indicadores principales</p>
+            <h2>Estado general de deuda vencida</h2>
+          </div>
+        </div>
+        <div class="kpi-grid" id="kpiGrid"></div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Síntesis visual</p>
+            <h2>Concentración, atraso y STOP</h2>
+          </div>
+        </div>
+        <div class="charts-grid">
+          <article class="panel">
+            <h3 class="panel-title">Monto vencido por grupo de afinidad</h3>
+            <p class="panel-subtitle">Top 10 por monto dentro del filtro aplicado.</p>
+            <div class="bar-list" id="groupBars"></div>
+          </article>
+          <article class="panel">
+            <h3 class="panel-title">Monto vencido por tramo de atraso</h3>
+            <p class="panel-subtitle">Distribución de deuda activa por nivel de mora.</p>
+            <div class="bucket-chart" id="bucketBars"></div>
+          </article>
+          <article class="panel">
+            <h3 class="panel-title">Distribución STOP</h3>
+            <p class="panel-subtitle">Casos filtrados con marca SI / NO.</p>
+            <div class="donut-wrap">
+              <div class="donut" id="stopDonut">
+                <div class="donut-center"><strong id="stopPct">0%</strong><span>STOP SI</span></div>
+              </div>
+              <div class="legend" id="stopLegend"></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Focos críticos</p>
+            <h2>Rankings ejecutivos de exposición</h2>
+            <p class="section-note">Lectura acotada a los principales puntos de concentración.</p>
+          </div>
+        </div>
+        <div class="rank-grid">
+          <article class="panel">
+            <h3 class="panel-title">Top 10 grupos de afinidad</h3>
+            <p class="panel-subtitle">Mayor monto vencido acumulado.</p>
+            <div id="groupRanking"></div>
+          </article>
+          <article class="panel">
+            <h3 class="panel-title">Top 10 localidades</h3>
+            <p class="panel-subtitle">Mayor monto vencido acumulado.</p>
+            <div id="localityRanking"></div>
+          </article>
+          <article class="panel">
+            <h3 class="panel-title">Top empresas de cobro</h3>
+            <p class="panel-subtitle">Segmentación de deuda activa por empresa.</p>
+            <div id="companyRanking"></div>
+          </article>
+          <article class="panel">
+            <h3 class="panel-title">Top 10 mayores deudores</h3>
+            <p class="panel-subtitle">Identificación protegida para vista ejecutiva.</p>
+            <div id="debtorRanking"></div>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Detalle protegido</p>
+            <h2>Casos de mayor exposición</h2>
+            <p class="section-note">Se muestran hasta 25 registros filtrados, ordenados por monto vencido.</p>
+          </div>
+        </div>
+        <article class="panel detail-panel">
+          <div class="table-scroll" id="detailTable"></div>
+        </article>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Lectura ejecutiva sugerida</p>
+            <h2>Conclusiones automáticas</h2>
+          </div>
+        </div>
+        <div class="insights" id="insights"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>© <strong>Mutual 22 de Septiembre</strong>. Todos los derechos reservados.</span>
+      <span>Desarrollado por <strong>Mariana Tobares</strong>.</span>
+    </footer>
+  </div>
+
+  <script>
+    const BUCKET_ORDER = [
+      "1 a 30 dias",
+      "31 a 60 dias",
+      "61 a 90 dias",
+      "91 a 180 dias",
+      "181 a 360 dias",
+      "Mas de 360 dias"
+    ];
+
+    const BUCKET_LABELS = {
+      "Sin atraso": "Sin atraso",
+      "1 a 30 dias": "1 a 30 días",
+      "31 a 60 dias": "31 a 60 días",
+      "61 a 90 dias": "61 a 90 días",
+      "91 a 180 dias": "91 a 180 días",
+      "181 a 360 dias": "181 a 360 días",
+      "Mas de 360 dias": "Más de 360 días"
+    };
+
+    const source = window.REPORTE58_DATA || { summary: {}, rows: [] };
+    let allRows = Array.isArray(source.rows) ? source.rows : [];
+
+    const els = {
+      subtitle: document.getElementById("subtitle"),
+      recordScope: document.getElementById("recordScope"),
+      loadStatus: document.getElementById("loadStatus"),
+      excelFile: document.getElementById("excelFile"),
+      resetFilters: document.getElementById("resetFilters"),
+      groupFilter: document.getElementById("groupFilter"),
+      localityFilter: document.getElementById("localityFilter"),
+      companyFilter: document.getElementById("companyFilter"),
+      stopFilter: document.getElementById("stopFilter"),
+      bucketFilter: document.getElementById("bucketFilter"),
+      minAmount: document.getElementById("minAmount"),
+      maxAmount: document.getElementById("maxAmount"),
+      kpiGrid: document.getElementById("kpiGrid"),
+      groupBars: document.getElementById("groupBars"),
+      bucketBars: document.getElementById("bucketBars"),
+      stopDonut: document.getElementById("stopDonut"),
+      stopPct: document.getElementById("stopPct"),
+      stopLegend: document.getElementById("stopLegend"),
+      groupRanking: document.getElementById("groupRanking"),
+      localityRanking: document.getElementById("localityRanking"),
+      companyRanking: document.getElementById("companyRanking"),
+      debtorRanking: document.getElementById("debtorRanking"),
+      detailTable: document.getElementById("detailTable"),
+      insights: document.getElementById("insights")
+    };
+
+    const currency = new Intl.NumberFormat("es-AR", {
+      style: "currency",
+      currency: "ARS",
+      maximumFractionDigits: 0
+    });
+
+    const compactCurrency = new Intl.NumberFormat("es-AR", {
+      style: "currency",
+      currency: "ARS",
+      notation: "compact",
+      maximumFractionDigits: 1
+    });
+
+    const integer = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 });
+    const percent = new Intl.NumberFormat("es-AR", { style: "percent", maximumFractionDigits: 1 });
+
+    function formatDate(value) {
+      if (!value) return "Sin fecha";
+      const date = new Date(`${String(value).slice(0, 10)}T00:00:00`);
+      return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString("es-AR");
+    }
+
+    function text(value, fallback = "") {
+      const clean = String(value ?? "").trim().replace(/\s+/g, " ");
+      return clean || fallback;
+    }
+
+    function normalizeText(value, fallback = "Sin dato") {
+      return text(value, fallback);
+    }
+
+    function parseNumber(value) {
+      if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+      const raw = String(value ?? "").trim();
+      if (!raw) return 0;
+      const clean = raw.replace(/[^\d,.-]/g, "");
+      if (!clean) return 0;
+      const hasComma = clean.includes(",");
+      const hasDot = clean.includes(".");
+      let normalized = clean;
+      if (hasComma && hasDot) normalized = clean.replace(/\./g, "").replace(",", ".");
+      else if (hasComma) normalized = clean.replace(",", ".");
+      const parsed = Number(normalized);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function parseInteger(value) {
+      return Math.max(0, Math.trunc(parseNumber(value)));
+    }
+
+    function normalizeStop(value) {
+      const clean = String(value ?? "")
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .toUpperCase()
+        .trim();
+      return clean === "SI" || clean === "S" || clean === "TRUE" || clean === "1" ? "SI" : "NO";
+    }
+
+    function maskDni(value) {
+      const digits = String(value ?? "").replace(/\D/g, "");
+      if (!digits) return "XX.XXX.XXX";
+      return `XX.XXX.${digits.slice(-3).padStart(3, "X")}`;
+    }
+
+    function hashKey(value) {
+      let hash = 2166136261;
+      const clean = String(value ?? "").trim();
+      for (let i = 0; i < clean.length; i += 1) {
+        hash ^= clean.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+      }
+      return `p_${(hash >>> 0).toString(36)}`;
+    }
+
+    function excelDateToIso(serial) {
+      const numeric = Number(serial);
+      if (!Number.isFinite(numeric) || numeric <= 0) return "";
+      const epoch = Date.UTC(1899, 11, 30);
+      return new Date(epoch + numeric * 86400000).toISOString().slice(0, 10);
+    }
+
+    function normalizeDate(value) {
+      if (value instanceof Date && !Number.isNaN(value.getTime())) {
+        return value.toISOString().slice(0, 10);
+      }
+      const clean = String(value ?? "").trim();
+      if (!clean) return "";
+      if (/^\d{4}-\d{2}-\d{2}/.test(clean)) return clean.slice(0, 10);
+      if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(clean)) {
+        const [day, month, year] = clean.split("/").map(Number);
+        const fullYear = year < 100 ? 2000 + year : year;
+        return `${fullYear}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      }
+      if (/^\d+(\.\d+)?$/.test(clean)) return excelDateToIso(clean);
+      return clean;
+    }
+
+    function atrasoBucket(days) {
+      if (days <= 0) return "Sin atraso";
+      if (days <= 30) return "1 a 30 dias";
+      if (days <= 60) return "31 a 60 dias";
+      if (days <= 90) return "61 a 90 dias";
+      if (days <= 180) return "91 a 180 dias";
+      if (days <= 360) return "181 a 360 dias";
+      return "Mas de 360 dias";
+    }
+
+    function pick(row, names) {
+      for (const name of names) {
+        if (Object.prototype.hasOwnProperty.call(row, name)) return row[name];
+      }
+      const normalizedNames = names.map((name) => name.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase());
+      const key = Object.keys(row).find((candidate) =>
+        normalizedNames.includes(candidate.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase())
+      );
+      return key ? row[key] : "";
+    }
+
+    function normalizeWorkbookRows(rows) {
+      return rows.map((row, index) => {
+        const maxDays = parseInteger(pick(row, ["Max de días de atraso", "Max de dias de atraso"]));
+        const amount = parseNumber(pick(row, ["Monto vencido total"]));
+        const name = normalizeText(pick(row, ["Apellido, Nombre"]), "Asociado sin identificar");
+        const dniDigits = String(pick(row, ["DNI"]) ?? "").replace(/\D/g, "");
+        return {
+          id: index + 1,
+          personKey: hashKey(dniDigits || `${name}-${index + 1}`),
+          name,
+          dniMasked: maskDni(pick(row, ["DNI"])),
+          maxDays,
+          minDays: parseInteger(pick(row, ["Min de días de atraso", "Min de dias de atraso"])),
+          group: normalizeText(pick(row, ["Grupo de Afinidad"])),
+          amount,
+          locality: normalizeText(pick(row, ["Localidad"])),
+          stop: normalizeStop(pick(row, ["STOP"])),
+          company: normalizeText(pick(row, ["Empresas de Cobro"])),
+          calcDate: normalizeDate(pick(row, ["Fecha Calculo Deuda"])),
+          bucket: atrasoBucket(maxDays)
+        };
+      });
+    }
+
+    function reportDate(rows) {
+      const counts = new Map();
+      rows.forEach((row) => {
+        if (row.calcDate) counts.set(row.calcDate, (counts.get(row.calcDate) || 0) + 1);
+      });
+      return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || "";
+    }
+
+    function sum(rows, field = "amount") {
+      return rows.reduce((acc, row) => acc + (Number(row[field]) || 0), 0);
+    }
+
+    function groupByAmount(rows, field) {
+      const map = new Map();
+      rows.forEach((row) => {
+        const key = row[field] || "Sin dato";
+        const current = map.get(key) || { label: key, amount: 0, count: 0 };
+        current.amount += row.amount || 0;
+        current.count += 1;
+        map.set(key, current);
+      });
+      return [...map.values()].sort((a, b) => b.amount - a.amount);
+    }
+
+    function uniqueCount(rows, field) {
+      return new Set(rows.map((row) => row[field]).filter(Boolean)).size;
+    }
+
+    function aggregateDebtors(rows) {
+      const map = new Map();
+      rows.forEach((row) => {
+        const key = row.personKey || `${row.name}-${row.dniMasked}`;
+        const current = map.get(key) || {
+          name: row.name,
+          dniMasked: row.dniMasked,
+          amount: 0,
+          maxDays: 0,
+          count: 0
+        };
+        current.amount += row.amount || 0;
+        current.maxDays = Math.max(current.maxDays, row.maxDays || 0);
+        current.count += 1;
+        map.set(key, current);
+      });
+      return [...map.values()].sort((a, b) => b.amount - a.amount);
+    }
+
+    function getFilteredRows() {
+      const group = els.groupFilter.value;
+      const locality = els.localityFilter.value;
+      const company = els.companyFilter.value;
+      const stop = els.stopFilter.value;
+      const bucket = els.bucketFilter.value;
+      const minAmount = els.minAmount.value === "" ? null : Number(els.minAmount.value);
+      const maxAmount = els.maxAmount.value === "" ? null : Number(els.maxAmount.value);
+
+      return allRows.filter((row) => {
+        if (group && row.group !== group) return false;
+        if (locality && row.locality !== locality) return false;
+        if (company && row.company !== company) return false;
+        if (stop && row.stop !== stop) return false;
+        if (bucket && row.bucket !== bucket) return false;
+        if (minAmount !== null && row.amount < minAmount) return false;
+        if (maxAmount !== null && row.amount > maxAmount) return false;
+        return true;
+      });
+    }
+
+    function renderOptions(select, rows, field, labelAll) {
+      const current = select.value;
+      const options = groupByAmount(rows, field);
+      select.innerHTML = `<option value="">${labelAll}</option>` + options
+        .map((item) => `<option value="${escapeHtml(item.label)}">${escapeHtml(item.label)}</option>`)
+        .join("");
+      if ([...select.options].some((option) => option.value === current)) select.value = current;
+    }
+
+    function renderBucketOptions() {
+      const options = ["", "Sin atraso", ...BUCKET_ORDER];
+      els.bucketFilter.innerHTML = options.map((bucket) => {
+        const label = bucket ? BUCKET_LABELS[bucket] : "Todos";
+        return `<option value="${bucket}">${label}</option>`;
+      }).join("");
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function renderKpis(filtered, active) {
+      const totalAmount = sum(active);
+      const severeAmount = sum(active.filter((row) => row.maxDays > 90));
+      const activeAssociates = uniqueCount(active, "personKey");
+      const values = [
+        {
+          title: "Registros analizados",
+          value: integer.format(filtered.length),
+          foot: `${integer.format(allRows.length)} en la base cargada`
+        },
+        {
+          title: "Asociados con deuda > 0",
+          value: integer.format(activeAssociates),
+          foot: `${integer.format(active.length)} registros activos`
+        },
+        {
+          title: "Monto vencido total",
+          value: currency.format(totalAmount),
+          foot: "Suma de deuda activa"
+        },
+        {
+          title: "Promedio por asociado con deuda",
+          value: currency.format(activeAssociates ? totalAmount / activeAssociates : 0),
+          foot: "Sobre asociados únicos con monto > 0"
+        },
+        {
+          title: "Monto máximo vencido",
+          value: currency.format(Math.max(0, ...active.map((row) => row.amount))),
+          foot: "Mayor exposición individual"
+        },
+        {
+          title: "Máximo de días de atraso",
+          value: integer.format(Math.max(0, ...filtered.map((row) => row.maxDays))),
+          foot: "Días corridos detectados"
+        },
+        {
+          title: "Casos con STOP = SI",
+          value: integer.format(filtered.filter((row) => row.stop === "SI").length),
+          foot: "Dentro del universo filtrado"
+        },
+        {
+          title: "Cartera en mora severa",
+          value: totalAmount ? percent.format(severeAmount / totalAmount) : "0%",
+          foot: "Monto con atraso mayor a 90 días"
+        }
+      ];
+
+      els.kpiGrid.innerHTML = values.map((kpi) => `
+        <article class="kpi-card">
+          <div class="kpi-title">${kpi.title}</div>
+          <div class="kpi-value">${kpi.value}</div>
+          <div class="kpi-foot">${kpi.foot}</div>
+        </article>
+      `).join("");
+    }
+
+    function renderBarList(container, items, limit = 10) {
+      const top = items.slice(0, limit);
+      const max = Math.max(1, ...top.map((item) => item.amount));
+      if (!top.length || top.every((item) => item.amount <= 0)) {
+        container.innerHTML = `<div class="empty">No hay deuda activa para esta selección.</div>`;
+        return;
+      }
+      container.innerHTML = top.map((item) => {
+        const width = Math.max(2, (item.amount / max) * 100);
+        return `
+          <div class="bar-row" title="${escapeHtml(item.label)}">
+            <div class="bar-label">${escapeHtml(item.label)}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div>
+            <div class="bar-value">${compactCurrency.format(item.amount)}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderBucketBars(active) {
+      const items = BUCKET_ORDER.map((bucket) => ({
+        label: BUCKET_LABELS[bucket],
+        amount: sum(active.filter((row) => row.bucket === bucket))
+      }));
+      const max = Math.max(1, ...items.map((item) => item.amount));
+      els.bucketBars.innerHTML = items.map((item) => {
+        const height = item.amount > 0 ? Math.max(4, (item.amount / max) * 170) : 4;
+        return `
+          <div class="bucket-item" title="${escapeHtml(item.label)}: ${currency.format(item.amount)}">
+            <div class="bucket-col" style="height:${height}px"></div>
+            <div class="bucket-value">${compactCurrency.format(item.amount)}</div>
+            <div class="bucket-label">${escapeHtml(item.label)}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderStop(filtered) {
+      const si = filtered.filter((row) => row.stop === "SI").length;
+      const no = filtered.length - si;
+      const share = filtered.length ? si / filtered.length : 0;
+      const degrees = share * 360;
+      els.stopDonut.style.background = `conic-gradient(var(--risk) 0deg ${degrees}deg, var(--ok) ${degrees}deg 360deg)`;
+      els.stopPct.textContent = filtered.length ? percent.format(share) : "0%";
+      els.stopLegend.innerHTML = `
+        <div class="legend-row">
+          <span class="legend-key"><span class="swatch stop"></span>STOP SI</span>
+          <span>${integer.format(si)} casos</span>
+        </div>
+        <div class="legend-row">
+          <span class="legend-key"><span class="swatch"></span>STOP NO</span>
+          <span>${integer.format(no)} casos</span>
+        </div>
+      `;
+    }
+
+    function renderRanking(container, rows, columns) {
+      if (!rows.length) {
+        container.innerHTML = `<div class="empty">Sin datos para mostrar.</div>`;
+        return;
+      }
+      container.innerHTML = `
+        <table>
+          <thead>
+            <tr>${columns.map((column) => `<th class="${column.numeric ? "numeric" : ""}">${column.label}</th>`).join("")}</tr>
+          </thead>
+          <tbody>
+            ${rows.map((row) => `
+              <tr>
+                ${columns.map((column) => `
+                  <td class="${column.numeric ? "numeric" : ""}">
+                    ${column.render ? column.render(row) : escapeHtml(row[column.key])}
+                  </td>
+                `).join("")}
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function renderRankings(active) {
+      const totalAmount = sum(active);
+      const amountColumns = [
+        { label: "Foco", key: "label", render: (row) => `<div class="table-name" title="${escapeHtml(row.label)}">${escapeHtml(row.label)}</div>` },
+        { label: "Casos", key: "count", numeric: true, render: (row) => integer.format(row.count) },
+        { label: "Monto", key: "amount", numeric: true, render: (row) => currency.format(row.amount) },
+        { label: "%", key: "share", numeric: true, render: (row) => totalAmount ? percent.format(row.amount / totalAmount) : "0%" }
+      ];
+
+      renderRanking(els.groupRanking, groupByAmount(active, "group").slice(0, 10), amountColumns);
+      renderRanking(els.localityRanking, groupByAmount(active, "locality").slice(0, 10), amountColumns);
+      renderRanking(els.companyRanking, groupByAmount(active, "company").slice(0, 10), amountColumns);
+
+      const debtors = aggregateDebtors(active).slice(0, 10);
+      renderRanking(els.debtorRanking, debtors, [
+        { label: "Asociado", key: "name", render: (row) => `<div class="table-name" title="${escapeHtml(row.name)}">${escapeHtml(row.name)}</div>` },
+        { label: "DNI", key: "dniMasked", render: (row) => `<span class="badge">${escapeHtml(row.dniMasked)}</span>` },
+        { label: "Reg.", key: "count", numeric: true, render: (row) => integer.format(row.count) },
+        { label: "Días", key: "maxDays", numeric: true, render: (row) => integer.format(row.maxDays) },
+        { label: "Monto", key: "amount", numeric: true, render: (row) => currency.format(row.amount) }
+      ]);
+    }
+
+    function renderDetail(active) {
+      const rows = [...active].sort((a, b) => b.amount - a.amount).slice(0, 25);
+      if (!rows.length) {
+        els.detailTable.innerHTML = `<div class="empty">No hay casos con deuda activa para esta selección.</div>`;
+        return;
+      }
+
+      els.detailTable.innerHTML = `
+        <table class="detail-table">
+          <thead>
+            <tr>
+              <th>Asociado</th>
+              <th>DNI protegido</th>
+              <th>Grupo</th>
+              <th>Localidad</th>
+              <th>Empresa</th>
+              <th>Tramo</th>
+              <th class="numeric">Días</th>
+              <th class="numeric">Monto vencido</th>
+              <th>STOP</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((row) => `
+              <tr>
+                <td><div class="table-name" title="${escapeHtml(row.name)}">${escapeHtml(row.name)}</div></td>
+                <td><span class="badge">${escapeHtml(row.dniMasked)}</span></td>
+                <td><div class="table-name" title="${escapeHtml(row.group)}">${escapeHtml(row.group)}</div></td>
+                <td><div class="table-name" title="${escapeHtml(row.locality)}">${escapeHtml(row.locality)}</div></td>
+                <td><div class="table-name" title="${escapeHtml(row.company)}">${escapeHtml(row.company)}</div></td>
+                <td>${escapeHtml(BUCKET_LABELS[row.bucket] || row.bucket)}</td>
+                <td class="numeric">${integer.format(row.maxDays)}</td>
+                <td class="numeric">${currency.format(row.amount)}</td>
+                <td><span class="badge ${row.stop === "SI" ? "risk" : ""}">${row.stop}</span></td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function renderInsights(filtered, active) {
+      const totalAmount = sum(active);
+      const topGroup = groupByAmount(active, "group")[0];
+      const topLocality = groupByAmount(active, "locality")[0];
+      const bucketAmounts = BUCKET_ORDER.map((bucket) => ({
+        label: BUCKET_LABELS[bucket],
+        amount: sum(active.filter((row) => row.bucket === bucket)),
+        severe: ["91 a 180 dias", "181 a 360 dias", "Mas de 360 dias"].includes(bucket)
+      })).sort((a, b) => b.amount - a.amount);
+      const topBucket = bucketAmounts[0];
+      const severeAmount = sum(active.filter((row) => row.maxDays > 90));
+      const stopShare = filtered.length ? filtered.filter((row) => row.stop === "SI").length / filtered.length : 0;
+
+      const recommendation = !active.length
+        ? "No se observan registros con deuda vencida activa en la selección actual."
+        : severeAmount / Math.max(totalAmount, 1) >= 0.5
+          ? "Priorizar un plan de recupero focalizado en mora mayor a 90 días, con revisión semanal de los principales focos."
+          : topGroup && topGroup.amount / Math.max(totalAmount, 1) >= 0.3
+            ? "Concentrar seguimiento ejecutivo en el principal grupo de afinidad y monitorear desvíos por localidad."
+            : "Mantener gestión segmentada, reforzando alertas tempranas en tramos de 31 a 90 días.";
+
+      const items = [
+        {
+          title: "Principal concentración de deuda",
+          body: topGroup
+            ? `${topGroup.label} concentra ${currency.format(topGroup.amount)} (${percent.format(topGroup.amount / Math.max(totalAmount, 1))} del monto filtrado).`
+            : "No hay concentración identificable en la selección actual."
+        },
+        {
+          title: "Localidad con mayor exposición",
+          body: topLocality
+            ? `${topLocality.label} reúne ${currency.format(topLocality.amount)} (${percent.format(topLocality.amount / Math.max(totalAmount, 1))}).`
+            : "No hay localidad predominante para la selección actual."
+        },
+        {
+          title: "Tramo de atraso más riesgoso",
+          body: topBucket && topBucket.amount > 0
+            ? `${topBucket.label} es el tramo con mayor monto: ${currency.format(topBucket.amount)}. La mora severa representa ${percent.format(severeAmount / Math.max(totalAmount, 1))}.`
+            : "No hay deuda activa distribuida por tramos."
+        },
+        {
+          title: "Proporción STOP",
+          body: `Los casos STOP = SI representan ${percent.format(stopShare)} del universo filtrado.`
+        },
+        {
+          title: "Recomendación general",
+          body: recommendation
+        },
+        {
+          title: "Seguimiento sugerido",
+          body: "Revisar en comité los 10 mayores deudores protegidos, el top de grupos y las localidades con concentración superior al promedio."
+        }
+      ];
+
+      els.insights.innerHTML = items.map((item) => `
+        <article class="insight">
+          <strong>${escapeHtml(item.title)}</strong>
+          <span>${escapeHtml(item.body)}</span>
+        </article>
+      `).join("");
+    }
+
+    function renderDashboard() {
+      const filtered = getFilteredRows();
+      const active = filtered.filter((row) => row.amount > 0);
+      const date = reportDate(allRows) || source.summary?.reportDate || "";
+      els.subtitle.textContent = `Reporte 58 – Análisis de deuda al ${formatDate(date)}`;
+      els.recordScope.textContent = `${integer.format(filtered.length)} registros filtrados`;
+
+      renderKpis(filtered, active);
+      renderBarList(els.groupBars, groupByAmount(active, "group"), 10);
+      renderBucketBars(active);
+      renderStop(filtered);
+      renderRankings(active);
+      renderDetail(active);
+      renderInsights(filtered, active);
+    }
+
+    function initializeFilters() {
+      renderOptions(els.groupFilter, allRows, "group", "Todos");
+      renderOptions(els.localityFilter, allRows, "locality", "Todas");
+      renderOptions(els.companyFilter, allRows, "company", "Todas");
+      renderBucketOptions();
+      const maxAmount = Math.max(0, ...allRows.map((row) => row.amount || 0));
+      els.maxAmount.placeholder = maxAmount ? `Hasta ${Math.ceil(maxAmount)}` : "Hasta";
+    }
+
+    function resetFilters() {
+      [els.groupFilter, els.localityFilter, els.companyFilter, els.stopFilter, els.bucketFilter].forEach((select) => {
+        select.value = "";
+      });
+      els.minAmount.value = "";
+      els.maxAmount.value = "";
+      renderDashboard();
+    }
+
+    async function handleExcelUpload(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      if (!window.XLSX) {
+        els.loadStatus.textContent = "SheetJS no disponible";
+        return;
+      }
+      els.loadStatus.textContent = "Procesando Excel...";
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: "array", cellDates: true });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+      allRows = normalizeWorkbookRows(rows);
+      els.loadStatus.textContent = `${file.name} cargado`;
+      initializeFilters();
+      resetFilters();
+    }
+
+    document.querySelectorAll("select, input[type='number']").forEach((control) => {
+      control.addEventListener("change", renderDashboard);
+      control.addEventListener("input", renderDashboard);
+    });
+    els.resetFilters.addEventListener("click", resetFilters);
+    els.excelFile.addEventListener("change", handleExcelUpload);
+
+    initializeFilters();
+    renderDashboard();
+  </script>
+</body>
+</html>
